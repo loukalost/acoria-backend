@@ -6,6 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import type { SignOptions } from 'jsonwebtoken';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
@@ -87,7 +88,9 @@ export class AuthService {
       { sub, email, role },
       {
         secret: this.configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
-        expiresIn: this.configService.getOrThrow<string>('JWT_ACCESS_EXPIRES_IN'),
+        expiresIn: this.configService.getOrThrow<string>(
+          'JWT_ACCESS_EXPIRES_IN',
+        ) as SignOptions['expiresIn'],
       },
     );
 
@@ -95,7 +98,9 @@ export class AuthService {
       { sub, email, role },
       {
         secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
-        expiresIn: this.configService.getOrThrow<string>('JWT_REFRESH_EXPIRES_IN'),
+        expiresIn: this.configService.getOrThrow<string>(
+          'JWT_REFRESH_EXPIRES_IN',
+        ) as SignOptions['expiresIn'],
       },
     );
 

@@ -22,7 +22,9 @@ describe('Auth (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true }),
+    );
     await app.init();
 
     prisma = moduleFixture.get<PrismaService>(PrismaService);
@@ -66,7 +68,12 @@ describe('Auth (e2e)', () => {
     it('should reject invalid payload with 400', async () => {
       await request(app.getHttpServer())
         .post('/auth/register')
-        .send({ email: 'pas-un-email', password: '123', nom: 'Test', prenom: 'E2E' })
+        .send({
+          email: 'pas-un-email',
+          password: '123',
+          nom: 'Test',
+          prenom: 'E2E',
+        })
         .expect(400);
     });
   });

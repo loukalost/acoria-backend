@@ -40,7 +40,9 @@ describe('AuthService', () => {
         },
         {
           provide: ConfigService,
-          useValue: { getOrThrow: jest.fn().mockReturnValue('fake-secret-or-value') },
+          useValue: {
+            getOrThrow: jest.fn().mockReturnValue('fake-secret-or-value'),
+          },
         },
       ],
     }).compile();
@@ -126,7 +128,10 @@ describe('AuthService', () => {
       });
 
       await expect(
-        service.login({ email: 'test@acoria.fr', password: 'mauvais_mot_de_passe' }),
+        service.login({
+          email: 'test@acoria.fr',
+          password: 'mauvais_mot_de_passe',
+        }),
       ).rejects.toThrow(UnauthorizedException);
     });
   });
