@@ -7,7 +7,28 @@ on:
     branches: [main]
 
 jobs:
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run Snyk security scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        continue-on-error: true
+
   build:
+    name: Lint, Test & Build
+    needs: security
     runs-on: ubuntu-latest
 
     services:
@@ -48,5 +69,9 @@ jobs:
       - run: npx prisma migrate deploy
 
       - run: npm run lint
+
+      - run: npm run test
+
+      - run: npm run test:e2e
 
       - run: npm run build
