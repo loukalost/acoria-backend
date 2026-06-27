@@ -1,0 +1,25 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  PATIENT
+  THERAPEUTE
+}
+
+model Utilisateur {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  nom          String
+  prenom       String
+  role         Role     @default(THERAPEUTE)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("utilisateurs")
+}
