@@ -2,14 +2,14 @@ import {
   Injectable,
   ConflictException,
   UnauthorizedException,
-} from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
-import { ConfigService } from "@nestjs/config";
-import * as bcrypt from "bcrypt";
-import { Role } from "@prisma/client";
-import { PrismaService } from "../prisma/prisma.service";
-import { RegisterDto } from "./dto/register.dto";
-import { LoginDto } from "./dto/login.dto";
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import * as bcrypt from 'bcrypt';
+import { Role } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -24,7 +24,7 @@ export class AuthService {
       where: { email: dto.email },
     });
     if (existing) {
-      throw new ConflictException("Un compte existe déjà avec cet email");
+      throw new ConflictException('Un compte existe déjà avec cet email');
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
@@ -39,7 +39,11 @@ export class AuthService {
       },
     });
 
-    return this.generateTokens(utilisateur.id, utilisateur.email, utilisateur.role);
+    return this.generateTokens(
+      utilisateur.id,
+      utilisateur.email,
+      utilisateur.role,
+    );
   }
 
   async login(dto: LoginDto) {
@@ -48,7 +52,7 @@ export class AuthService {
     });
 
     if (!utilisateur) {
-      throw new UnauthorizedException("Identifiants invalides");
+      throw new UnauthorizedException('Identifiants invalides');
     }
 
     const isPasswordValid = await bcrypt.compare(
@@ -57,10 +61,14 @@ export class AuthService {
     );
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException("Identifiants invalides");
+      throw new UnauthorizedException('Identifiants invalides');
     }
 
-    return this.generateTokens(utilisateur.id, utilisateur.email, utilisateur.role);
+    return this.generateTokens(
+      utilisateur.id,
+      utilisateur.email,
+      utilisateur.role,
+    );
   }
 
   async validateUtilisateur(id: string) {
@@ -70,7 +78,7 @@ export class AuthService {
     if (!utilisateur) {
       throw new UnauthorizedException();
     }
-    const { passwordHash, ...result } = utilisateur;
+    const { passwordHash: _passwordHash, ...result } = utilisateur;
     return result;
   }
 
@@ -78,16 +86,16 @@ export class AuthService {
     const accessToken = this.jwtService.sign(
       { sub, email, role },
       {
-        secret: this.configService.getOrThrow<string>("JWT_ACCESS_SECRET"),
-        expiresIn: this.configService.get("JWT_ACCESS_EXPIRES_IN"),
+        secret: this.configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
+        expiresIn: this.configService.get('JWT_ACCESS_EXPIRES_IN'),
       },
     );
 
     const refreshToken = this.jwtService.sign(
       { sub, email, role },
       {
-        secret: this.configService.getOrThrow<string>("JWT_REFRESH_SECRET"),
-        expiresIn: this.configService.get("JWT_REFRESH_EXPIRES_IN"),
+        secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
+        expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_IN'),
       },
     );
 
