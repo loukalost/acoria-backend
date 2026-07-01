@@ -2,6 +2,9 @@ name: tests
 on:
   workflow_call:
 
+env:
+  DATABASE_URL: "postgresql://user:password@localhost:5432/db?schema=public"
+
 jobs:
   tests:
     name: Run tests
