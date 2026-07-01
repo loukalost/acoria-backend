@@ -5,8 +5,11 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-  app.enableCors({ origin: 'http://localhost:3000', credentials: true });
-  await app.listen(process.env.PORT ?? 3001);
+  app.enableCors({
+    origin: process.env.FRONTEND_URL ?? 'http://localhost:3000',
+    credentials: true,
+  });
+  await app.listen(process.env.PORT ?? 51212);
 }
 
 bootstrap().catch((err) => {
