@@ -1,0 +1,30 @@
+name: quality
+on:
+  workflow_call:
+
+jobs:
+  analyse:
+    name: Analyse Code with SonarQube
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - run: npm ci --no-audit --no-fund
+      - run: npx prisma generate
+      - run: npm run test:cov
+        env:
+          CI: true
+          NODE_ENV: test
+
+      - uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
