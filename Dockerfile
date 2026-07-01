@@ -55,7 +55,7 @@ COPY prisma ./prisma/
 # Install uniquement les deps de prod + regénère le client Prisma pour cette étape
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --omit=dev --no-audit --no-fund \
-  && npx prisma generate \
+  && ./node_modules/.bin/prisma generate \
   && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 
 COPY --from=builder --chown=node:node /app/dist ./dist

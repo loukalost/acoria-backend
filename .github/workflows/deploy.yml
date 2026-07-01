@@ -18,5 +18,5 @@ jobs:
             cd /home/ubuntu/projects/acoria
             docker compose pull
             docker compose up -d --remove-orphans
-            docker exec acoria-backend npx prisma migrate deploy
+            docker exec acoria-backend ./node_modules/.bin/prisma migrate deploy
             docker system prune -a -f
