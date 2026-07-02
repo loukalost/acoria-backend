@@ -51,6 +51,7 @@ ENV PORT=51212
 
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma/
+COPY prisma.config.ts ./
 
 # Install uniquement les deps de prod + regénère le client Prisma pour cette étape
 RUN --mount=type=cache,target=/root/.npm \
