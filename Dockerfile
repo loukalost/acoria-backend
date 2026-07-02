@@ -48,6 +48,7 @@ RUN apt-get update \
 
 ENV NODE_ENV=production
 ENV PORT=51212
+ENV DATABASE_URL="postgresql://user:password@localhost:5432/db?schema=public"
 
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma/
