@@ -149,8 +149,12 @@ npm run format  # Prettier sur src/ et test/
 
 ## Ressources
 
-- Registre d'images Docker : _à compléter (lien GHCR ou registre Scaleway)_
-- Dashboard de monitoring : _à compléter_
+- Backoffice thérapeute : dépôt [`acoria-backoffice`](https://github.com/loukalost/acoria-backoffice)
+- Registre d'images Docker : GitHub Container Registry, image `ghcr.io/loukalost/acoria-backend:latest` ([page du package](https://github.com/loukalost/acoria-backend/pkgs/container/acoria-backend))
+- Pipeline CI/CD : [GitHub Actions](https://github.com/loukalost/acoria-backend/actions)
+- Qualité du code : analyse SonarQube (projet `loukalost_acoria-backend_4cc1c111-8758-49fb-894e-d0643dc8c518`)
+- Sécurité des dépendances : analyse Snyk, lancée à chaque push
+- Dashboard de monitoring : _à compléter (aucun outil de monitoring en place pour l'instant)_
 
 ## Roadmap
 
