@@ -1,98 +1,159 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Acoria Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API backend de l'application Acoria, construite avec NestJS. Elle centralise l'authentification, la gestion des couples, le chat temps réel, les activités, les notes et les statistiques, derrière un unique gateway sécurisé par JWT.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Sommaire
 
-## Description
+- [Architecture](#architecture)
+- [Stack technique](#stack-technique)
+- [Prérequis](#prérequis)
+- [Lancer le projet en local](#lancer-le-projet-en-local)
+- [Variables d'environnement](#variables-denvironnement)
+- [Base de données](#base-de-données)
+- [Tests](#tests)
+- [Déploiement](#déploiement)
+- [Contribuer](#contribuer)
+- [Ressources](#ressources)
+- [Roadmap](#roadmap)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Architecture
 
-## Project setup
+```mermaid
+flowchart TD
+    Mobile[App mobile React Native] -->|HTTP / WebSocket| Gateway
+    Backoffice[Backoffice Next.js] -->|HTTP| Gateway
 
-```bash
-$ npm install
+    subgraph API["acoria-backend (NestJS)"]
+        Gateway[API Gateway<br/>Auth JWT, rôles, rate limiting]
+        Gateway --> Auth[Module Auth]
+        Gateway --> Chat[Module Chat]
+        Gateway --> Activites[Module Activités]
+        Gateway --> Notes[Module Notes]
+        Gateway --> Stats[Module Stats]
+        Gateway --> Therapeute[Module Thérapeute]
+    end
+
+    Auth --> DB[(PostgreSQL)]
+    Chat --> DB
+    Activites --> DB
+    Notes --> DB
+    Stats --> DB
+    Therapeute --> DB
 ```
 
-## Compile and run the project
+Le gateway centralise l'authentification JWT, le contrôle des rôles (patient / thérapeute) et le rate limiting avant que la moindre requête n'atteigne un module métier.
+
+## Stack technique
+
+| Composant        | Choix                                   |
+| ---------------- | --------------------------------------- |
+| Framework        | NestJS 11                               |
+| Langage          | TypeScript                              |
+| ORM              | Prisma (adapter `pg`)                   |
+| Base de données  | PostgreSQL                              |
+| Authentification | Passport + JWT (access / refresh token) |
+| Validation       | class-validator / class-transformer     |
+| Tests            | Jest                                    |
+
+## Prérequis
+
+- Node.js 20 ou supérieur
+- npm
+- Une instance PostgreSQL accessible (locale ou distante)
+
+## Lancer le projet en local
 
 ```bash
-# development
-$ npm run start
+# 1. Cloner le repo
+git clone https://github.com/loukalost/acoria-backend.git
+cd acoria-backend
 
-# watch mode
-$ npm run start:dev
+# 2. Installer les dépendances
+npm install
 
-# production mode
-$ npm run start:prod
+# 3. Configurer les variables d'environnement
+cp .env.example .env
+# puis renseigner les valeurs, voir la section ci-dessous
+
+# 4. Appliquer les migrations Prisma
+npx prisma migrate dev
+
+# 5. Lancer le serveur en mode watch
+npm run start:dev
 ```
 
-## Run tests
+L'API est disponible sur `http://localhost:3001` par défaut.
+
+## Variables d'environnement
+
+| Variable                 | Description                            | Exemple                                                          |
+| ------------------------ | -------------------------------------- | ---------------------------------------------------------------- |
+| `DATABASE_URL`           | Chaîne de connexion PostgreSQL         | `postgresql://user:password@localhost:5432/dbname?schema=public` |
+| `PORT`                   | Port d'écoute de l'API                 | `3001`                                                           |
+| `JWT_ACCESS_SECRET`      | Secret de signature des access tokens  | à générer, jamais commité                                        |
+| `JWT_REFRESH_SECRET`     | Secret de signature des refresh tokens | à générer, jamais commité                                        |
+| `JWT_ACCESS_EXPIRES_IN`  | Durée de vie de l'access token         | `15m`                                                            |
+| `JWT_REFRESH_EXPIRES_IN` | Durée de vie du refresh token          | `7d`                                                             |
+
+Un fichier `.env.example` est fourni comme référence. Le fichier `.env` réel ne doit jamais être commité.
+
+## Base de données
+
+Le schéma est géré via Prisma :
 
 ```bash
-# unit tests
-$ npm run test
+# Créer une nouvelle migration après modification du schema.prisma
+npx prisma migrate dev --name <nom_de_la_migration>
 
-# e2e tests
-$ npm run test:e2e
+# Régénérer le client Prisma
+npx prisma generate
 
-# test coverage
-$ npm run test:cov
+# Explorer la base en local
+npx prisma studio
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Tests
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm run test        # tests unitaires
+npm run test:watch  # mode watch
+npm run test:cov    # avec couverture
+npm run test:e2e    # tests end-to-end
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Déploiement
 
-## Resources
+Le déploiement est automatisé via GitHub Actions (`.github/workflows/main.yml`), déclenché à chaque push :
 
-Check out a few resources that may come in handy when working with NestJS:
+```
+[Push] → [Security Check] + [Tests] → [Build & Push image Docker] → [Deploy to Server]
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+- **Security Check** : analyse de sécurité du code et des dépendances
+- **Tests** : exécution de la suite Jest
+- **Build & Push Docker** : construction de l'image et publication sur le registre
+- **Deploy to Server** : déploiement sur le serveur de production (Scaleway)
 
-## Support
+Aucune action manuelle n'est requise pour déployer en production, un merge sur la branche principale déclenche le pipeline complet.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Contribuer
 
-## Stay in touch
+```bash
+npm run lint    # ESLint avec correction automatique
+npm run format  # Prettier sur src/ et test/
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- Créer une branche par fonctionnalité ou correctif
+- Ouvrir une pull request vers la branche principale
+- S'assurer que le lint et les tests passent avant de merger
 
-## License
+## Ressources
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- Registre d'images Docker : _à compléter (lien GHCR ou registre Scaleway)_
+- Dashboard de monitoring : _à compléter_
+
+## Roadmap
+
+- [ ] Documentation Swagger de l'API (OpenAPI)
+- [ ] `docker-compose.yml` versionné pour l'environnement de développement local
+- [ ] ADR sur les choix structurants (NestJS, Prisma, PostgreSQL, Scaleway)
