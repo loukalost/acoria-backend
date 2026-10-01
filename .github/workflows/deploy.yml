@@ -6,6 +6,9 @@ jobs:
   deploy:
     name: Deploy to Server
     runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
 
     steps:
       - name: Deploy to Server
@@ -15,8 +18,10 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            set -e
             cd /home/ubuntu/projects/acoria
-            docker compose pull
-            docker compose up -d --remove-orphans
-            docker exec acoria-backend ./node_modules/.bin/prisma migrate deploy
-            docker system prune -a -f
+            flock -w 600 /tmp/acoria-deploy.lock sh -c '
+              docker compose pull &&
+              docker compose up -d --remove-orphans &&
+              docker image prune -f --filter "until=72h"
+            '
